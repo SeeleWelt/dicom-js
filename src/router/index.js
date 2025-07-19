@@ -1,10 +1,3 @@
-import DicomVolumeAD from "@/components/other/DicomVolumeAD.vue";
-import DicomVolume from "@/components/other/DicomVolume.vue";
-import TestMip from "@/components/other/TestMip.vue"
-import SingleAxisViewport from "@/components/SingleAxisViewport/SingleAxisViewport.vue";
-import OtherTest from "@/components/other/OtherTest.vue";
-import DicomsFromServer from "@/components/SingleAxisViewport/DicomsFromServer.vue";
-import MainView from "@/components/MainView.vue";
 import { createRouter, createWebHistory } from 'vue-router'
 import selectView from '@/views/login/selectView.vue'
 import loginView from '../views/login/loginView.vue'
@@ -16,7 +9,6 @@ import studentView from '@/views/Student/components/studentView.vue'
 import studentViewcut from '@/views/Student/components/studentViewcut.vue'
 import studentViewelse from '@/views/Student/components/studentViewelse.vue'
 import studySession from '@/views/Student/components/studySession.vue'
-import teacherRegister from '@/views/login/teacherRegister.vue'
 import teacherLogin from '@/views/login/teacherLogin.vue'
 import teacherHome from '@/views/Teacher/teacherHome.vue'
 import teacherView from '@/views/Teacher/components/teacherView.vue'
@@ -29,36 +21,38 @@ import inquirecomplete from '@/views/Teacher/components/inquireComplete.vue'
 import adminLogin from '@/views/login/adminLogin.vue'
 import adminIndex from '@/views/Admin/adminIndex.vue'
 import adminHome from '@/views/Admin/adminHome.vue'
-import changePassword from '@/views/Admin/components/changePassword.vue'
-import changeStudentPwd from '@/views/Admin/components/changeStudentPwd.vue'
 import inquireStudent from '@/views/Admin/components/inquireStudent.vue'
 import inquireTeacher from '@/views/Admin/components/inquireTeacher.vue'
 import scheduleView from '@/views/Admin/components/scheduleView.vue'
 import scheduleChange from '@/views/Admin/components/scheduleChange.vue'
-const router = createRouter({
-  history: createWebHistory(),
-  routes: [
+import SingleAxisViewport from '@/components/SingleAxisViewport/SingleAxisViewport.vue'
+import DicomVolumeAD from '@/components/other/DicomVolumeAD.vue'
+import DicomVolume from '@/components/other/DicomVolume.vue'
+import TestMip from '@/components/other/TestMip.vue'
+import OtherTest from '@/components/other/OtherTest.vue'
+import DicomsFromServer from '@/components/SingleAxisViewport/DicomsFromServer.vue'
+import MainView from '@/components/MainView.vue'
+
+const routes = [
     {
-      // 首页
       path: '/',
       name: 'selectView',
-      component: selectView
-      // redirect: '/login'
+    component: selectView,
+    meta: { requiresAuth: false }
     },
     {
-      // 登陆页
       path: '/login',
       name: 'login',
-      component: loginView
+    component: loginView,
+    meta: { requiresAuth: false }
     },
     {
-      // 注册页
       path: '/register',
       name: 'register',
-      component: registerView
+    component: registerView,
+    meta: { requiresAuth: false }
     },
     {
-      //学生主页
       path: '/studentIndex',
       name: 'studentIndex',
       component: studentIndex,
@@ -66,53 +60,42 @@ const router = createRouter({
         {
           path: '/studentHome',
           name: 'studentHome',
-          component: studentHome
+        component: studentHome,
         },
         {
           path: '/updateStudentInfo',
           name: 'updateStudentInfo',
-          component: updateStudentInfo
+        component: updateStudentInfo,
         },
-        //三维渲染
         {
           path: '/studentView',
           name: 'studentView',
-          component: studentView
+        component: studentView,
         },
-        //切片
         {
           path: '/studentViewcut',
           name: 'studentViewcut',
-          component: studentViewcut
+        component: studentViewcut,
         },
-        //其他
         {
           path: '/studentViewelse',
           name: 'studentViewelse',
-          component: studentViewelse
+        component: studentViewelse,
         },
-        // 章节学习
         {
           path: '/studySession',
           name: 'studySession',
-          component: studySession
-        },
-      ]
-    },
-    // 教师注册
-    {
-      path: '/teacherRegister',
-      name: 'teacherRegister',
-      component: teacherRegister
-    },
-    // 教师登录
+        component: studySession,
+      }
+    ]
+  },
     {
       path: '/teacherLogin',
       name: 'teacherLogin',
-      component: teacherLogin
+    component: teacherLogin,
+    meta: { requiresAuth: false }
     },
     {
-      // 教师主页
       path: '/teacherIndex',
       name: 'teacherIndex',
       component: teacherIndex,
@@ -120,90 +103,92 @@ const router = createRouter({
         {
           path: '/teacherHome',
           name: 'teacherHome',
-          component: teacherHome
+        component: teacherHome,
+
         },
         {
           path: '/updateTeacherInfo',
           name: 'updateTeacherInfo',
-          component: updateTeacherInfo
+        component: updateTeacherInfo,
+
         },
         {
           path: '/teacherViewcut',
           name: 'teacherViewcut',
-          component: teacherViewcut
+        component: teacherViewcut,
+
         },
         {
           path: '/inquireComplete',
           name: 'inquireComplete',
-          component: inquirecomplete
+        component: inquirecomplete,
+
         },
         {
           path: '/teacherViewelse',
           name: 'teacherViewelse',
-          component: teacherViewelse
+        component: teacherViewelse,
+
         },
         {
           path: '/teacherView',
           name: 'teacherView',
-          component: teacherView
+        component: teacherView,
+
         },
         {
           path: '/teacherAssignment',
           name: 'teacherAssignment',
-          component: teacherAssignment
+        component: teacherAssignment,
+
         }
       ]
     },
     {
-      // 管理员登录
       path: '/adminLogin',
       name: 'adminLogin',
-      component: adminLogin
+    component: adminLogin,
+    meta: { requiresAuth: false }
     },
     {
-      // 管理员主页
       path: '/adminIndex',
       name: 'adminIndex',
       component: adminIndex,
+
       children: [
         {
           path: '/adminHome',
           name: 'adminHome',
-          component: adminHome
-        },
-        {
-          path: '/changePassword',
-          name: 'changePassword',
-          component: changePassword
-        },
-        {
-          path: '/changeStudentPwd',
-          name: 'changeStudentPwd',
-          component: changeStudentPwd
+        component: adminHome,
+  
         },
         {
           path: '/inquireStudent',
           name: 'inquireStudent',
-          component: inquireStudent
+        component: inquireStudent,
+
         },
         {
           path: '/inquireTeacher',
           name: 'inquireTeacher',
-          component: inquireTeacher
+        component: inquireTeacher,
+
         },
         {
           path: '/scheduleView',
           name: 'scheduleView',
-          component: scheduleView
+        component: scheduleView,
+
         },
         {
           path: '/scheduleChange',
           name: 'scheduleChange',
-          component: scheduleChange
-        }
+        component: scheduleChange,
+
+        },
       ]
     },
-        {
+    {
         path:'/singleAxisViewport',
         component:SingleAxisViewport,
     },
@@ -232,6 +217,101 @@ const router = createRouter({
         component:MainView,
     }
   ]
+
+const router = createRouter({
+  history: createWebHistory(),
+  routes
 })
+
+// // 路由守卫
+// router.beforeEach((to, from, next) => {
+//   // // 开发环境下跳过验证（方便可视化调试）
+//   // const isDevelopment = import.meta.env.MODE === 'development';
+//   // if (isDevelopment) {
+//   //   // 根据访问的路由自动设置对应角色权限
+//   //   if (to.path.includes('/student')) {
+//   //     localStorage.setItem('token', 'test-token');
+//   //     localStorage.setItem('userRole', 'student');
+//   //     localStorage.setItem('name', 'xyin');
+//   //     localStorage.setItem('email', 'xyin');
+//   //   } else if (to.path.includes('/teacher')) {
+//   //     localStorage.setItem('token', 'teacher-token');
+//   //     localStorage.setItem('userRole', 'teacher');
+//   //     localStorage.setItem('name', 'teacher');
+//   //     localStorage.setItem('email', 'teacher@test.com');
+//   //   } else if (to.path.includes('/admin')) {
+//   //     localStorage.setItem('token', 'admin-token');
+//   //     localStorage.setItem('userRole', 'admin');
+//   //     localStorage.setItem('adminRole', 'superAdmin');
+//   //     localStorage.setItem('name', 'admin');
+//   //     localStorage.setItem('email', 'admin@test.com');
+//   //   }
+//   //   next();
+//   //   return;
+//   // }
+
+//   // 生产环境下的正常验证逻辑
+//   // const token = localStorage.getItem('token')
+//   const userRole = localStorage.getItem('role')
+//   console.log(userRole)
+//   // const adminRole = localStorage.getItem('adminRole')
+
+//   // 不需要认证的路由直接通过
+//   if (!to.meta.requiresAuth) {
+//     next()
+//     return
+//   }
+
+//   // // 需要认证但没有token
+//   // if (!token) {
+//   //   next('/login')
+//   //   return
+//   // }
+//   console.log("to.meta.role",to.meta.role)
+//   // 需要特定角色权限
+//   if (to.meta.role && to.meta.role !== userRole) {
+//     next('/login')
+//     return
+//   }
+
+//   // 检查超级管理员权限
+//   // if (to.meta.requireSuperAdmin && adminRole !== 'superAdmin') {
+//   //   next('/adminHome')
+//   //   return
+//   // }
+
+//   next()
+// })
+
+// ====================== 测试账号配置区域 ======================
+// 说明：此区域代码仅用于开发测试，正式环境请删除
+
+// 1. 学生端测试配置
+/*
+localStorage.setItem('token', 'test-token');
+localStorage.setItem('userRole', 'student');
+localStorage.setItem('name', 'xyin');
+localStorage.setItem('email', 'xyin');
+*/
+
+// 2. 教师端测试配置
+// 取消注释以下代码可直接访问教师端
+// localStorage.setItem('token', 'teacher-token');
+// localStorage.setItem('userRole', 'teacher');
+// localStorage.setItem('name', 'teacher');
+// localStorage.setItem('email', 'teacher@test.com');
+
+// 3. 管理员端测试配置
+// 取消注释以下代码可直接访问管理员端
+// 如需超级管理员权限，请将 adminRole 设置为 'superAdmin'
+/*
+localStorage.setItem('token', 'admin-token');
+localStorage.setItem('userRole', 'admin');
+localStorage.setItem('adminRole', 'superAdmin');  // 可选：superAdmin 或 普通管理员不设置
+localStorage.setItem('name', 'admin');
+localStorage.setItem('email', 'admin@test.com');
+*/
+
+// ====================== 测试账号配置区域结束 ======================
 
 export default router

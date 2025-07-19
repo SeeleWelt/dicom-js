@@ -45,7 +45,7 @@
 import SIdentify from '../../components/SidentifyView.vue'
 import { ElMessage } from 'element-plus'
 import { ref } from 'vue'
-import axios from '@/utils/axios-config.js'
+import axios from "axios"
 import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 axios.defaults.withCredentials = true; // 允许跨域携带 cookie 信息，必须加上
@@ -102,11 +102,11 @@ const submitForm = async () => {
       password: ruleForm.value.password
     }
 
-    console.log('请求数据' + requestData.email + ' ' + requestData.password)
+    console.log('请求数据' + requestData.uno + ' ' + requestData.password)
     const response = await axios.get('http://localhost:8000/get_csrf_token/');
     const csrfToken = response.data.token;
     axios
-      .post('http://localhost:8000/student/login', requestData,
+      .post('http://localhost:8000/student/login/', requestData,
         {
           headers:{
             'Content-Type':"application/json",
@@ -115,9 +115,15 @@ const submitForm = async () => {
         }
       )
       .then(function (response) {
-        console.log('响应数据：', response.data)
-        if (response.data !== null) {
+        const data = response.data
+        if (data !== null) {
           ElMessage({ type: 'success', message: '登录成功' })
+          localStorage.clear()
+          localStorage.setItem('id',data.id)
+          localStorage.setItem('name',data.name)
+          localStorage.setItem('class',data.class)
+          localStorage.setItem('email',data.email)
+          localStorage.setItem('phone',data.phone)
           router.push('/studentHome')
         } else {
           ElMessage({ type: 'error', message: '登录失败' })

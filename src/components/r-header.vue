@@ -2,10 +2,10 @@
   <div class="header-container">
     <!-- 主页图标 -->
     <el-icon style="margin-top: 5px;"><House /></el-icon>
-    <!-- localStorage数据库的专业major -->
-    <span class="user-major">{{ major }}  </span>
+    <!-- localStorage数据库的专业major
+    <span class="user-major">{{ major }}  </span> -->
     <!-- localStorage数据库的班级名classnum -->
-    <span class="user-classnum">{{ classnum }} 班 </span>
+    <span class="user-classnum">{{ className }} </span>
     <!-- 用户图标 -->
     <img style="width: 25px; height: 25px; line-height: 25px; padding: 5px;" :src="imageUrl"/>
     <!-- localStorage数据库的姓名name -->
@@ -35,6 +35,8 @@
 </template>
 
 <script>
+import axios from 'axios';
+
 export default {
   name: 'r-header',
   data() {
@@ -50,12 +52,13 @@ export default {
   created() {
     // 从 localStorage 获取数据，如果没有则使用默认值
     this.name = localStorage.getItem('name') || this.name;
-    this.className = localStorage.getItem('className') || this.className;
+    this.className = localStorage.getItem('class');
     this.email = localStorage.getItem('email') || this.email;
   },
   methods: {
     out() {
       localStorage.clear()
+      axios.get("http://localhost:8000/student/logout/")
       this.$router.push('/')
     }
   }

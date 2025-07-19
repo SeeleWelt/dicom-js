@@ -20,31 +20,8 @@ export const updateStudentInfo = (studentData) => {
     return axios.post('/student/update', studentData);
 };
 
-// 管理员查询教师信息
-// 搜索教师
-export const searchTeacher = (params) => {
-    return axios.post('/admin/teacher/search', params);
-};
 
-// 添加教师的API
-export const addTeacher = (teacherData) => {
-    return axios.post('/admin/teacher/add', teacherData);
-};
 
-// 删除教师的 API
-export const removeTeacher = (teacherId) => {
-    return axios.delete(`/admin/teacher/${teacherId}`);
-};
-
-// 更新教师信息的API
-export const updateTeacher = (teacherData) => {
-    return axios.put(`/admin/teacher/${teacherData.id}`, teacherData);
-};
-
-// 重置教师密码的API
-export const resetTeacherPassword = (data) => {
-    return axios.post('/admin/teacher/reset-password', data);
-};
 
 // 更新课程信息的API
 export const updateCourseInfo = (courseData) => {

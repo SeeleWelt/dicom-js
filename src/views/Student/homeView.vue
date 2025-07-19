@@ -6,15 +6,16 @@
           <infoCard></infoCard>
           <!-- 轮播图容器 -->
           <div class="carousel-container">
-            <!-- 轮播图内容 -->
-            <div class="block text-center">
-              <!-- 轮播图组件 -->
-              <el-carousel height="600px" motion-blur :interval="2000">
-                <el-carousel-item v-for="(item, index) in imageList" :key="index">
-                  <!-- 图片 -->
-                  <img :src="item.src" :alt="'Slide ' + index" class="carousel-image" />
-                </el-carousel-item>
-              </el-carousel>
+            <div class="block text-center course-blocks">
+              <el-button
+                v-for="course in studentCourses"
+                :key="course.id"
+                class="course-btn"
+                @click="goToCourse()"
+                :style="{ background: course.color }"
+              >
+                {{ course.name }}
+              </el-button>
             </div>
           </div>
         </el-card>
@@ -31,12 +32,45 @@
 import infoCard from '@/components/infoCard.vue'
 import IdleDetector from '@/components/IdleDetector.vue';
 import { sendLearningTime } from '@/api/api.js';
-const imageList = [
-  { src: 'src/assets/image/1.png' },
-  { src: 'src/assets/image/2.png' }
-  // Add more images as needed
-]
+import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
+import axios from 'axios'
+axios.defaults.withCredentials = true; // 允许跨域携带 cookie 信息，必须加上
 let learningTime = 0; // 用于存储学习时长
+
+const studentCourses = ref([]);
+const router = useRouter();
+const pastelColors = ['#FFD6E0', '#B5EAD7', '#C7CEEA', '#FFDAC1', '#E2F0CB', '#B5D8FA'];
+const fetchStudentCourses = async (id)=> {
+  try {
+    await axios.get("http://localhost:8000/student/courses/",{
+      params:{
+        id:id
+      }
+    }).then(response=> {
+      const data = response.data
+      studentCourses.value = data.courses.map((c, i) => ({ ...c, color: pastelColors[i % pastelColors.length] }));
+    })
+  } catch (error) {
+    console.error('删除课程失败:', error);
+    throw error;
+  }
+}
+async function loadCourses() {
+  const id = localStorage.getItem('id');
+  try {
+    await fetchStudentCourses(id);
+  } catch (e) {
+    // ===== MOCK数据演示（如无后端可用，自动填充三条课程，后续可删除） =====
+    const data = [
+      { id: 'C001', name: '高等数学' },
+      { id: 'C002', name: '大学英语' },
+      { id: 'C003', name: '数据结构' }
+    ];
+    studentCourses.value = data.map((c, i) => ({ ...c, color: pastelColors[i % pastelColors.length] }));
+    // ===== MOCK数据演示结束 =====
+  }
+}
 
 async function updateLearningTime(time) {
   learningTime = time;
@@ -48,6 +82,12 @@ async function updateLearningTime(time) {
     console.error('发送学习时长失败:', error);
   }
 }
+
+function goToCourse() {
+  router.push({ name: 'studentHome' });
+}
+
+onMounted(loadCourses);
 </script>
 <style scoped>
 .container {
@@ -63,6 +103,32 @@ async function updateLearningTime(time) {
   height: 500px;
   width: 1000px;
   margin: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.course-blocks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 32px;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+}
+.course-btn {
+  width: 120px;
+  height: 120px;
+  border-radius: 35px;
+  font-size: 20px;
+  color: #fff;
+  font-weight: bold;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  border: none;
+  transition: transform 0.1s;
+}
+.course-btn:hover {
+  transform: scale(1.08);
+  filter: brightness(1.1);
 }
 /* 轮播图图片样式 */
 .carousel-image {

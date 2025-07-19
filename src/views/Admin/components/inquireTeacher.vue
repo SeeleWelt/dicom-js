@@ -1,99 +1,149 @@
 <template>
-  <div>
-    <h1>查询教师档案</h1>
-    <div class="searchCourse">
+  <div class="teacher-manage">
+    <div class="search-bar">
       <el-input
-        v-model="keywords"
-        style="max-width: 600px"
-        placeholder="请输入进行搜索"
-        class="input-with-select"
+        v-model="searchQuery"
+        placeholder="搜索教师姓名/工号"
+        clearable
+        @clear="handleSearch"
+        @keyup.enter="handleSearch"
       >
-        <template #prepend>
-          <el-select v-model="select" placeholder="选择类型" style="width: 115px">
-            <el-option label="工号" value="account" />
-            <el-option label="姓名" value="name" />
-            <el-option label="性别" value="sex" />
-          </el-select>
-        </template>
         <template #append>
-          <el-button @click="searchClick" icon="search" />
+          <el-button :icon="Search" @click="handleSearch">搜索</el-button>
         </template>
       </el-input>
-      <el-button type="primary" style="margin-left: 10px; background-color: skyblue;border: 0;" @click="handleAdd">新 增</el-button>
+      
+      <el-button 
+        type="primary" 
+        :icon="Plus"
+        @click="handleAdd"
+      >
+        添加教师
+      </el-button>
     </div>
-    <br />
-    <el-card>
-      <el-table :data="teachers" style="width: 100%" max-height="400">
-        <el-table-column fixed prop="id" label="序号" width="200">
-        </el-table-column>
-        <el-table-column fit="true" prop="user.account" label="工号" width="200">
-        </el-table-column>
-        <el-table-column fit="true" prop="name" label="姓名" width="200">
-        </el-table-column>
-        <el-table-column fit="true" prop="sex" label="性别" width="200">
-        </el-table-column>
-        <el-table-column fixed="right" label="操作">
-          <template #default="scope">
-            <el-button size="small" @click="handleEdit(scope.$index, scope.row)">编辑</el-button>
-            <el-button size="small" type="danger" @click="deleteTeacher(scope.$index, scope.row)">删除</el-button>
-          </template>
-        </el-table-column>
-      </el-table>
 
-      <el-footer>
-        <el-pagination
-          background
-          layout="prev, pager, next"
-          style="padding-top: 20px; padding-right: 50px; text-align: right;"
-          :total="50"
-        ></el-pagination>
-      </el-footer>
-    </el-card>
+    <el-table
+      v-loading="loading"
+      :data="filteredTeachers"
+      border
+      style="width: 100%"
+    >
+      <el-table-column prop="id" label="工号" width="120" />
+      <el-table-column prop="name" label="姓名" width="120" />
+      <el-table-column prop="email" label="邮箱" width="200" />
+      <el-table-column prop="department" label="所属院系" width="150" />
+      <el-table-column prop="title" label="职称" width="120" />
+      <el-table-column label="操作" fixed="right" width="250">
+        <template #default="{ row, $index }">
+          <el-button 
+            type="primary" 
+            link
+            :icon="Edit"
+            @click="handleEdit(row, $index)"
+          >
+            编辑
+          </el-button>
+          <el-button 
+            type="primary" 
+            link
+            :icon="Key"
+            @click="handleResetPassword(row)"
+          >
+            重置密码
+          </el-button>
+          <el-button 
+            type="danger" 
+            link
+            :icon="Delete"
+            @click="handleDelete($index)"
+          >
+            删除
+          </el-button>
+        </template>
+      </el-table-column>
+    </el-table>
 
-    <!-- 新增界面 -->
-    <el-dialog v-model="addFormVisible" title="新增" :append-to-body="true" @close="resetForm(addFormRef)">
-      <el-form :model="addForm" label-width="80px" :rules="addFormRules" ref="addFormRef">
-        <el-form-item label="工号" prop="account">
-          <el-input v-model="addForm.account" auto-complete="off"></el-input>
-        </el-form-item>
-        <el-form-item label="密码" prop="password">
-          <el-input v-model="addForm.password" auto-complete="off"></el-input>
+    <el-pagination
+      v-model:current-page="currentPage"
+      v-model:page-size="pageSize"
+      :page-sizes="[10, 20, 30, 50]"
+      layout="total, sizes, prev, pager, next"
+      :total="total"
+      @size-change="handleSizeChange"
+      @current-change="handleCurrentChange"
+    />
+
+    <!-- 添加/编辑教师对话框 -->
+    <el-dialog
+      v-model="dialogVisible"
+      :title="dialogType === 'add' ? '添加教师' : '编辑教师'"
+      width="500px"
+    >
+      <el-form
+        ref="teacherFormRef"
+        :model="teacherForm"
+        :rules="teacherRules"
+        label-width="100px"
+      >
+        <el-form-item label="工号" prop="id">
+          <el-input v-model="teacherForm.id" :disabled="dialogType === 'edit'" />
         </el-form-item>
         <el-form-item label="姓名" prop="name">
-          <el-input v-model="addForm.name" auto-complete="off"></el-input>
+          <el-input v-model="teacherForm.name" />
         </el-form-item>
-        <el-form-item label="性别">
-          <el-radio-group v-model="radios" @change="addFormChangeSex">
-            <el-radio :label="1">男</el-radio>
-            <el-radio :label="0">女</el-radio>
-          </el-radio-group>
+        <el-form-item label="邮箱" prop="email">
+          <el-input v-model="teacherForm.email" />
+        </el-form-item>
+        <el-form-item label="所属院系" prop="department">
+          <el-input v-model="teacherForm.department" />
+        </el-form-item>
+        <el-form-item label="职称" prop="title">
+          <el-select v-model="teacherForm.title" placeholder="请选择职称">
+            <el-option label="教授" value="教授" />
+            <el-option label="副教授" value="副教授" />
+            <el-option label="讲师" value="讲师" />
+            <el-option label="助教" value="助教" />
+          </el-select>
+        </el-form-item>
+        <el-form-item v-if="dialogType === 'add'" label="初始密码" prop="password">
+          <el-input v-model="teacherForm.password" type="password" show-password />
         </el-form-item>
       </el-form>
       <template #footer>
         <span class="dialog-footer">
-          <el-button @click="addFormVisible = false">取 消</el-button>
-          <el-button type="primary" @click="addSubmit" :loading="listenLoading">提 交</el-button>
+          <el-button @click="dialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="handleSubmit" :loading="submitting">
+            确定
+          </el-button>
         </span>
       </template>
     </el-dialog>
 
-    <!-- 编辑界面 -->
-    <el-dialog v-model="editFormVisible" title="编辑" :append-to-body="true" @close="resetForm(editFormRef)">
-      <el-form :model="editForm" label-width="80px" :rules="editFormRules" ref="editFormRef">
-        <el-form-item label="工号" prop="account">
-          <el-input v-model="editForm.account" auto-complete="off"></el-input>
+    <!-- 重置密码对话框 -->
+    <el-dialog
+      v-model="resetPwdVisible"
+      title="重置密码"
+      width="400px"
+    >
+      <el-form
+        ref="resetPwdFormRef"
+        :model="resetPwdForm"
+        :rules="resetPwdRules"
+        label-width="100px"
+      >
+        <el-form-item label="新密码" prop="newPassword">
+          <el-input v-model="resetPwdForm.newPassword" type="password" show-password />
         </el-form-item>
-        <el-form-item label="密码" prop="password">
-          <el-input v-model="editForm.password" auto-complete="off"></el-input>
-        </el-form-item>
-        <el-form-item label="姓名" prop="name">
-          <el-input v-model="editForm.name" auto-complete="off"></el-input>
+        <el-form-item label="确认密码" prop="confirmPassword">
+          <el-input v-model="resetPwdForm.confirmPassword" type="password" show-password />
         </el-form-item>
       </el-form>
       <template #footer>
         <span class="dialog-footer">
-          <el-button @click="editFormVisible = false">取 消</el-button>
-          <el-button type="primary" @click="editSubmit" :loading="listenLoading">提 交</el-button>
+          <el-button @click="resetPwdVisible = false">取消</el-button>
+          <el-button type="primary" @click="handleResetPwdSubmit" :loading="submitting">
+            确定
+          </el-button>
         </span>
       </template>
     </el-dialog>
@@ -101,187 +151,378 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue';
-// import axios from '@/utils/axios-config.js';
-import { fetchteacherInfo, searchTeacher, addTeacher, updateTeacherInfo} from '@/api/api.js';
-import { ElMessage } from 'element-plus';
+import { ref, reactive, computed, onMounted } from 'vue';
+import { ElMessage, ElMessageBox } from 'element-plus';
+import { Search, Plus, Edit, Delete, Key } from '@element-plus/icons-vue';
+import axios from 'axios'
+axios.defaults.withCredentials = true; // 允许跨域携带 cookie 信息，必须加上
+// import { searchTeacher } from '@/api/api'; // 如需切换接口数据，取消注释
 
-const select = ref('account');
-const keywords = ref('');
-const teachers = ref([]);
-const totalTeachers = ref(0);
+// ===== mock 数据，仅供开发调试，后续可删除 =====
+// const mockTeachers = [
+//   {
+//     id: '2023000001',
+//     name: '张三',
+//     email: 'zhangsan@example.com',
+//     department: '计算机学院',
+//     title: '教授',
+//     status: '在职'
+//   },
+//   {
+//     id: '2023000002',
+//     name: '李四',
+//     email: 'lisi@example.com',
+//     department: '数学学院',
+//     title: '副教授',
+//     status: '在职'
+//   },
+//   {
+//     id: '2023000003',
+//     name: '王五',
+//     email: 'wangwu@example.com',
+//     department: '物理学院',
+//     title: '讲师',
+//     status: '在职'
+//   }
+// ];
+// ===========================================
 
-const addFormVisible = ref(false);
-const editFormVisible = ref(false);
-const listenLoading = ref(false);
-const addForm = reactive({
+const loading = ref(false);
+const searchQuery = ref('');
+const currentPage = ref(1);
+const pageSize = ref(10);
+const total = ref(0); // mock 数据总数
+const teacherList = ref([]); // 初始化为 mock 数据
+
+// 表单相关
+const dialogVisible = ref(false);
+const dialogType = ref('add');
+const submitting = ref(false);
+const teacherFormRef = ref(null);
+const teacherForm = reactive({
   id: '',
-  account: '',
-  password: '',
   name: '',
-  sex: '',
-});
-const editForm = reactive({
-  user: '',
-  name: '',
-  sex: '',
-});
-const radios = ref(1);
-
-const addFormRules = reactive({
-  account: [{ required: true, message: '请输入工号', trigger: 'blur' }],
-  password: [{ required: true, message: '请输入密码', trigger: 'blur' }],
-  name: [{ required: true, message: '请输入姓名', trigger: 'blur' }],
-});
-const editFormRules = reactive({
-  account: [{ required: true, message: '请输入工号', trigger: 'blur' }],
-  password: [{ required: true, message: '请输入密码', trigger: 'blur' }],
-  name: [{ required: true, message: '请输入姓名', trigger: 'blur' }],
+  email: '',
+  department: '',
+  title: '',
+  status: '在职',
+  password: ''
 });
 
-const addFormRef = ref(null);
-const editFormRef = ref(null);
+const teacherRules = {
+  id: [
+    { required: true, message: '请输入工号', trigger: 'blur' },
+    { min: 1, max: 10, message: '长度应为10个字符', trigger: 'blur' }
+  ],
+  name: [
+    { required: true, message: '请输入姓名', trigger: 'blur' }
+  ],
+  email: [
+    { required: true, message: '请输入邮箱', trigger: 'blur' },
+    { type: 'email', message: '请输入正确的邮箱地址', trigger: 'blur' }
+  ],
+  department: [
+    { required: true, message: '请输入所属院系', trigger: 'blur' }
+  ],
+  title: [
+    { required: true, message: '请选择职称', trigger: 'change' }
+  ],
+  status: [
+    { required: true, message: '请选择状态', trigger: 'change' }
+  ],
+  password: [
+    { required: true, message: '请输入初始密码', trigger: 'blur' },
+    { min: 6, max: 20, message: '长度在 6 到 20 个字符', trigger: 'blur' }
+  ]
+};
 
-// 搜索结果
-const searchResult = ref([]);
+// 重置密码相关
+const resetPwdVisible = ref(false);
+const resetPwdFormRef = ref(null);
+const currentTeacher = ref(null);
+const resetPwdForm = reactive({
+  newPassword: '',
+  confirmPassword: ''
+});
 
-// 加载教师信息
-const loadTeacherInfo = async () => {
+const resetPwdRules = {
+  newPassword: [
+    { required: true, message: '请输入新密码', trigger: 'blur' },
+    { min: 6, max: 20, message: '长度在 6 到 20 个字符', trigger: 'blur' }
+  ],
+  confirmPassword: [
+    { required: true, message: '请确认密码', trigger: 'blur' },
+    {
+      validator: (rule, value, callback) => {
+        if (value !== resetPwdForm.newPassword) {
+          callback(new Error('两次输入密码不一致'));
+        } else {
+          callback();
+        }
+      },
+      trigger: 'blur'
+    }
+  ]
+};
+
+// 管理员查询教师信息
+// 搜索教师
+const searchTeacher = () => {
+    return axios.get('http://localhost:8000/admin/teacher/search/')
+};
+
+// 方法
+const loadTeacherList = async () => {
+  // ===== 调试阶段，使用 mock 数据 =====
+  // teacherList.value = [...mockTeachers];
+  // total.value = teacherList.value.length;
+
+  // ===== 切换为接口数据，注释上面两行，取消下面注释 =====
+  // ===== 其实我也没看明白，主要就是获取后台存储好的教师data
+  loading.value = true;
   try {
-    const response = await fetchteacherInfo();
-    teachers.value = response.data;
-    totalTeachers.value = teachers.value.length;
+    const response = await searchTeacher();
+    console.log(response.data)
+    teacherList.value = response.data.list;
   } catch (error) {
-    console.error('加载教师信息失败:', error);
+    ElMessage.error('获取教师列表失败');
+  } finally {
+    loading.value = false;
   }
 };
 
-// 搜索框逻辑
-const searchClick = async () => {
-  try {
-    const response = await searchTeacher({ keywords: keywords.value, type: select.value });
-    searchResult.value = response.data;
-    teachers.value = searchResult.value;
-  } catch (error) {
-    console.error('搜索失败:', error);
-  }
+const handleSearch = async () => {
+  await loadTeacherList()
+  currentPage.value = 1;
 };
 
-// 更新选中记录的逻辑
+const handleSizeChange = async (val) => {
+  pageSize.value = val;
+  currentPage.value = 1;
+};
+
+const handleCurrentChange = async (val) => {
+  currentPage.value = val;
+
+};
+
 const handleAdd = () => {
-  addFormVisible.value = true;
-  Object.assign(addForm, {
-    id: '100',
-    account: '',
-    password: '',
-    name: '',
-    sex: '男',
+  dialogType.value = 'add';
+  Object.keys(teacherForm).forEach(key => {
+    teacherForm[key] = '';
   });
+  teacherForm.status = '在职';
+  dialogVisible.value = true;
 };
 
-// 更新提交逻辑
-const addSubmit = () => {
-  addFormRef.value.validate(async (valid) => {
-    if (valid) {
-      listenLoading.value = true;
-      try {
-        await addTeacher({
-          user: {
-            id: '',
-            account: addForm.account,
-            password: addForm.password,
-            type: 2,
-          },
-          name: addForm.name,
-          sex: addForm.sex,
-        });
-        listenLoading.value = false;
-        addFormVisible.value = false;
-        await loadTeacherInfo();
-        ElMessage({ type: 'success', message: '添加成功' });
-      } catch (error) {
-        listenLoading.value = false;
-        console.error('添加失败:', error);
-        ElMessage({ type: 'error', message: '添加失败' });
-      }
+const handleEdit = (row, index) => {
+  dialogType.value = 'edit';
+  Object.keys(teacherForm).forEach(key => {
+    if (key !== 'password') {
+      teacherForm[key] = row[key];
     }
   });
+  teacherForm._editIndex = index;
+  dialogVisible.value = true;
 };
 
-// 性别变更
-const addFormChangeSex = (value) => {
-  addForm.sex = value === 1 ? '男' : '女';
+const handleDelete = async (index) => {
+  try {
+    await ElMessageBox.confirm(
+      '确定要删除该教师吗？此操作不可恢复',
+      '警告',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    );
+    
+    await removeTeacher(teacherList.value[index].id);
+    await loadTeacherList();
+  } catch (error) {
+    if (error !== 'cancel') {
+      ElMessage.error('删除失败');
+    }
+  }
 };
 
-// 编辑逻辑
-const handleEdit = (index, row) => {
-  editFormVisible.value = true;
-  Object.assign(editForm, {
-    id: row.id,
-    userId: row.user.id,
-    account: row.user.account,
-    password: row.user.password,
-    name: row.name,
-    sex: row.sex,
+// 添加教师的API
+const addTeacher = async (teacherData) => {
+  const response = await axios.get('http://localhost:8000/get_csrf_token/');
+  const csrfToken = response.data.token;
+  await axios.post('http://localhost:8000/admin/teacher/add/', teacherData,{
+    headers:{
+        'Content-Type':"application/json",
+        "X-CSRFToken":csrfToken,
+      }
+  }
+  ).then(response => {
+    const data = response.data
+    ElMessage({type:data.state,message : data.msg})
+  }).catch(error => {
+    console.error('添加教师失败:', error);
+    throw error;
   });
-  radios.value = editForm.sex === '男' ? 1 : 0;
 };
 
-// 编辑表单验证逻辑
-const editSubmit = () => {
-  editFormRef.value.validate(async (valid) => {
-    if (valid) {
-      listenLoading.value = true;
-      try {
-        await updateTeacherInfo({
-          id: editForm.id,
-          user: {
-            id: editForm.userId,
-            account: editForm.account,
-            password: editForm.password,
-            type: 2,
-          },
-          name: editForm.name,
-          sex: editForm.sex,
-        });
-        listenLoading.value = false;
-        editFormVisible.value = false;
-        await loadTeacherInfo();
-        ElMessage({ type: 'success', message: '更新成功' });
-      } catch (error) {
-        listenLoading.value = false;
-        console.error('更新失败:', error);
-        ElMessage({ type: 'error', message: '更新失败' });
+// 删除教师的API
+const removeTeacher = async (teacherId) => {
+  await axios.get(`http://localhost:8000/admin/teacher/del/`,{params:{id:teacherId}})
+    .then(response => {
+      const data = response.data
+      ElMessage({type:data.state,message : data.msg}) 
+    })
+    .catch(error => {
+      console.error('删除失败:', error);
+      throw error; // 将错误继续抛出，以便调用者处理
+    });
+};
+
+
+// 更新教师信息的API
+const updateTeacher = async (teacherData) => {
+  await axios.get(`http://localhost:8000/admin/teacher/update/`, {
+    params:{
+      id: teacherData.id,
+      name: teacherData.name,
+      email: teacherData.email,
+      department: teacherData.department,
+      title: teacherData.title,
+      status: teacherData.status,
+    }
+  })
+    .then(response => {
+      const data = response.data
+      ElMessage({type:data.state,message : data.msg})
+    })
+    .catch(error => {
+      console.error('更新失败:', error);
+      throw error;
+    });
+};
+
+// 重置教师密码的API
+const resetTeacherPassword = async (data) => {
+  const response = await axios.get('http://localhost:8000/get_csrf_token/');
+  const csrfToken = response.data.token;
+  await axios.post('http://localhost:8000/admin/teacher/reset/', data,
+    {
+      headers:{
+        'Content-Type':"application/json",
+        "X-CSRFToken":csrfToken,
       }
     }
-  });
+  )
+    .then(response => {
+        const data = response.data
+        ElMessage({type:data.state,message : data.msg})
+    })
+    .catch(error => {
+      console.error('密码重置失败:', error);
+      throw error;
+    });
 };
 
-// 删除逻辑
-// const handleDelete = (index, row) => {
-//   removeTeacher(row.id)
-//     .then(() => {
-//       teachers.value.splice(index, 1);
-//       totalTeachers.value--;
-//       ElMessage({ type: 'success', message: '删除成功' });
-//     })
-//     .catch((error) => {
-//       console.error('删除失败:', error);
-//       ElMessage({ type: 'error', message: '删除失败' });
-//     });
-// };
+const handleResetPassword = (row) => {
+  currentTeacher.value = row;
+  resetPwdForm.newPassword = '';
+  resetPwdForm.confirmPassword = '';
+  resetPwdVisible.value = true;
+};
 
-onMounted(() => {
-  loadTeacherInfo();
+const handleSubmit = async () => {
+  if (!teacherFormRef.value) return;
+  
+  try {
+    await teacherFormRef.value.validate();
+    submitting.value = true;
+    
+    if (dialogType.value === 'add') {
+      await addTeacher(teacherForm);
+    } else {
+      await updateTeacher(teacherForm);
+    }
+    
+    dialogVisible.value = false;
+    await loadTeacherList();
+  } catch (error) {
+    ElMessage.error(error.message || '操作失败');
+  } finally {
+    submitting.value = false;
+  }
+};
+
+const handleResetPwdSubmit = async () => {
+  if (!resetPwdFormRef.value || !currentTeacher.value) return;
+  
+  try {
+    await resetPwdFormRef.value.validate();
+    submitting.value = true;
+    
+    await resetTeacherPassword({
+      id: currentTeacher.value.id,
+      newPassword: resetPwdForm.newPassword
+    });
+    
+    resetPwdVisible.value = false;
+  } catch (error) {
+    ElMessage.error(error.message || '重置密码失败');
+  } finally {
+    submitting.value = false;
+  }
+};
+
+const filteredTeachers = computed(() => {
+  if (!searchQuery.value) return teacherList.value;
+  const data = teacherList.value.filter(t =>
+    t.name.includes(searchQuery.value) ||
+    t.id.includes(searchQuery.value) ||
+    t.email.includes(searchQuery.value) ||
+    t.department.includes(searchQuery.value) ||
+    t.title.includes(searchQuery.value)
+  );
+
+    // 分页
+  const start = (currentPage.value - 1) * pageSize.value;
+  const end = start + pageSize.value;
+  updateTotal()
+  return data.slice(start, end);
+});
+
+// 更新总数
+const updateTotal = () => {
+  let data = teacherList.value;
+  total.value = data.length;
+};
+
+onMounted(async () => {
+  await loadTeacherList();
 });
 </script>
 
 <style scoped>
-.card {
-  margin-top: 16px;
-  background: #fff;
-  padding: 16px;
-  border-radius: 8px;
-  box-sizing: border-box;
+.teacher-manage {
+  padding: 20px;
+}
+
+.search-bar {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.search-bar .el-input {
+  width: 300px;
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+:deep(.el-table) {
+  margin-bottom: 20px;
 }
 </style>

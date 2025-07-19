@@ -1,110 +1,110 @@
 <template>
-  <div>
-    <h1>查询学生档案</h1>
-    <div class="searchCourse">
+  <div class="student-manage">
+    <div class="search-bar">
       <el-input
-        v-model="keywords"
-        style="max-width: 600px"
-        placeholder="请输入进行搜索"
-        class="input-with-select"
+        v-model="searchQuery"
+        placeholder="搜索学生姓名/学号"
+        clearable
+        @clear="handleSearch"
+        @keyup.enter="handleSearch"
       >
-        <template #prepend>
-          <el-select v-model="select" placeholder="选择类型" style="width: 115px">
-            <el-option label="学号" value="account" />
-            <el-option label="姓名" value="name" />
-            <el-option label="性别" value="sex" />
-          </el-select>
-        </template>
         <template #append>
-          <el-button @click="searchClick" icon="search" />
+          <el-button :icon="Search" @click="handleSearch">搜索</el-button>
         </template>
       </el-input>
-      <el-button type="primary" style="margin-left: 10px; background-color: skyblue;border: 0;" @click="handleAdd">新 增</el-button>
+      <el-button type="primary" :icon="Plus" @click="handleAdd">添加学生</el-button>
     </div>
-    <br />
-    <el-card>
-      <el-table :data="teachers" style="width: 100%" max-height="400">
-        <el-table-column fixed prop="id" label="序号" width="200">
-        </el-table-column>
-        <el-table-column fit="true" prop="user.account" label="学号" width="200">
-        </el-table-column>
-        <el-table-column fit="true" prop="name" label="姓名" width="200">
-        </el-table-column>
-        <el-table-column fit="true" prop="sex" label="性别" width="200">
-        </el-table-column>
-        <el-table-column fixed="right" label="操作">
-          <template #default="scope">
-            <el-button size="small" @click="handleEdit(scope.$index, scope.row)">编辑</el-button>
-            <el-button size="small" type="danger" @click="deleteTeacher(scope.$index, scope.row)">删除</el-button>
-          </template>
-        </el-table-column>
-      </el-table>
-      <!-- 分页组件 -->
-      <!-- <el-pagination
-        @size-change="handleSizeChange"
-        @current-change="handleCurrentChange"
-        :current-page="currentPage"
-        :page-sizes="[5, 10, 15, 20]"
-        :page-size="pageSize"
-        layout="total, sizes, prev, pager, next, jumper"
-        :total="totalTeachers"
-        style="margin-top: 20px"
-      >
-      </el-pagination> -->
-      <el-footer>
-        <el-pagination
-          background
-          layout="prev, pager, next"
-          style="padding-top: 20px; padding-right: 50px; text-align: right;"
-          :total="50"
-        ></el-pagination>
-      </el-footer>
-    </el-card>
 
-    <!-- 新增界面 -->
-    <el-dialog v-model="addFormVisible" title="新增" :append-to-body="true" @close="resetForm(addFormRef)">
-      <el-form :model="addForm" label-width="80px" :rules="addFormRules" ref="addFormRef">
-        <el-form-item label="学号" prop="account">
-          <el-input v-model="addForm.account" auto-complete="off"></el-input>
-        </el-form-item>
-        <el-form-item label="密码" prop="password">
-          <el-input v-model="addForm.password" auto-complete="off"></el-input>
+    <el-table
+      :data="filteredStudents"
+      border
+      style="width: 100%"
+    >
+      <el-table-column prop="id" label="学号" width="120" />
+      <el-table-column prop="name" label="姓名" width="120" />
+      <el-table-column prop="className" label="班级" width="120" />
+      <el-table-column prop="phone" label="手机号" width="150" />
+      <el-table-column prop="email" label="邮箱" width="200" />
+      <el-table-column label="操作" fixed="right" width="250">
+        <template #default="{ row, $index }">
+          <el-button type="primary" link :icon="Edit" @click="handleEdit(row, $index)">编辑</el-button>
+          <el-button type="primary" link :icon="Key" @click="handleResetPassword(row)">重置密码</el-button>
+          <el-button type="danger" link :icon="Delete" @click="handleDelete($index)">删除</el-button>
+        </template>
+      </el-table-column>
+    </el-table>
+
+    <el-pagination
+      v-model:current-page="currentPage"
+      v-model:page-size="pageSize"
+      :page-sizes="[10, 20, 30, 50]"
+      layout="total, sizes, prev, pager, next"
+      :total="total"
+      @size-change="handleSizeChange"
+      @current-change="handleCurrentChange"
+    />
+
+    <el-dialog
+      v-model="dialogVisible"
+      :title="dialogType === 'add' ? '添加学生' : '编辑学生'"
+      width="500px"
+    >
+      <el-form
+        ref="studentFormRef"
+        :model="studentForm"
+        :rules="studentRules"
+        label-width="100px"
+      >
+        <el-form-item label="学号" prop="id">
+          <el-input v-model="studentForm.id" :disabled="dialogType === 'edit'" />
         </el-form-item>
         <el-form-item label="姓名" prop="name">
-          <el-input v-model="addForm.name" auto-complete="off"></el-input>
+          <el-input v-model="studentForm.name" />
         </el-form-item>
-        <el-form-item label="性别">
-          <el-radio-group v-model="radios" @change="addFormChangeSex">
-            <el-radio :label="1">男</el-radio>
-            <el-radio :label="0">女</el-radio>
-          </el-radio-group>
+        <el-form-item label="班级" prop="className">
+          <el-input v-model="studentForm.className" />
+        </el-form-item>
+        <el-form-item label="手机号" prop="phone">
+          <el-input v-model="studentForm.phone" />
+        </el-form-item>
+        <el-form-item label="邮箱" prop="email">
+          <el-input v-model="studentForm.email" />
+        </el-form-item>
+        <el-form-item label="密码" prop="password" v-if="dialogType === 'add'">
+          <el-input v-model="studentForm.password" />
         </el-form-item>
       </el-form>
       <template #footer>
         <span class="dialog-footer">
-          <el-button @click="addFormVisible = false">取 消</el-button>
-          <el-button type="primary" @click="addSubmit" :loading="listenLoading">提 交</el-button>
+          <el-button @click="dialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="handleSubmit">确定</el-button>
         </span>
       </template>
     </el-dialog>
 
-    <!-- 编辑界面 -->
-    <el-dialog v-model="editFormVisible" title="编辑" :append-to-body="true" @close="resetForm(editFormRef)">
-      <el-form :model="editForm" label-width="80px" :rules="editFormRules" ref="editFormRef">
-        <el-form-item label="学号" prop="account">
-          <el-input v-model="editForm.account" auto-complete="off"></el-input>
+    <!-- 重置密码对话框 -->
+    <el-dialog
+      v-model="resetPwdVisible"
+      title="重置密码"
+      width="400px"
+    >
+      <el-form
+        ref="resetPwdFormRef"
+        :model="resetPwdForm"
+        :rules="resetPwdRules"
+        label-width="100px"
+      >
+        <el-form-item label="新密码" prop="newPassword">
+          <el-input v-model="resetPwdForm.newPassword" type="password" show-password />
         </el-form-item>
-        <el-form-item label="密码" prop="password">
-          <el-input v-model="editForm.password" auto-complete="off"></el-input>
-        </el-form-item>
-        <el-form-item label="姓名" prop="name">
-          <el-input v-model="editForm.name" auto-complete="off"></el-input>
+        <el-form-item label="确认密码" prop="confirmPassword">
+          <el-input v-model="resetPwdForm.confirmPassword" type="password" show-password />
         </el-form-item>
       </el-form>
       <template #footer>
         <span class="dialog-footer">
-          <el-button @click="editFormVisible = false">取 消</el-button>
-          <el-button type="primary" @click="editSubmit" :loading="listenLoading">提 交</el-button>
+          <el-button @click="resetPwdVisible = false">取消</el-button>
+          <el-button type="primary" @click="handleResetPwdSubmit" :loading="submitting">确定</el-button>
         </span>
       </template>
     </el-dialog>
@@ -112,192 +112,360 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue';
-import axios from '@/utils/axios-config.js';
+import { ref, reactive, computed, onMounted } from 'vue';
+import { ElMessage } from 'element-plus';
+import { Search, Plus, Edit, Delete, Key } from '@element-plus/icons-vue';
+import axios from 'axios';
 
-const select = ref('account');
-const keywords = ref('');
-const teachers = ref([]);
-// const currentPage = ref(1);
-// const pageSize = ref(5);
-const totalTeachers = ref(0);
+// API 接口配置
+const API_BASE_URL = 'http://localhost:8000/admin';
+const API_ENDPOINTS = {
+  STUDENTS: '/student/search/',
+  ADD:"/student/add/",
+  UPDATE:"/student/update/",
+  DEL:"/student/del/",
+  RESET_PASSWORD: '/student/reset/'
+};
 
-const addFormVisible = ref(false);
-const editFormVisible = ref(false);
-const listenLoading = ref(false);
-const addForm = reactive({
-  id: '',
-  account: '',
-  password: '',
-  name: '',
-  sex: '',
-});
-const editForm = reactive({
-  user: '',
-  name: '',
-  sex: '',
-});
-const radios = ref(1);
+// // 模拟数据生成函数
+// const generateMockStudents = () => {
+//   return [
+//     { id: 'S001', name: '张三', className: '计算机1班', phone: '13800000001', email: 'zhangsan@school.com' },
+//     { id: 'S002', name: '李四', className: '计算机2班', phone: '13800000002', email: 'lisi@school.com' },
+//     { id: 'S003', name: '王五', className: '计算机1班', phone: '13800000003', email: 'wangwu@school.com' },
+//     { id: 'S004', name: '赵六', className: '软件1班', phone: '13800000004', email: 'zhaoliu@school.com' },
+//     { id: 'S005', name: '钱七', className: '软件2班', phone: '13800000005', email: 'qianqi@school.com' },
+//   ];
+// };
 
-const addFormRules = reactive({
-  account: [{ required: true, message: '请输入学号', trigger: 'blur' }],
-  password: [{ required: true, message: '请输入密码', trigger: 'blur' }],
-  name: [{ required: true, message: '请输入姓名', trigger: 'blur' }],
-});
-const editFormRules = reactive({
-  account: [{ required: true, message: '请输入学号', trigger: 'blur' }],
-  password: [{ required: true, message: '请输入密码', trigger: 'blur' }],
-  name: [{ required: true, message: '请输入姓名', trigger: 'blur' }],
-});
-
-const addFormRef = ref(null);
-const editFormRef = ref(null);
-
-// 搜索结果
-const searchResult = ref([]);
-
-// 加载教师信息
-const loadTeacherInfo = () => {
-  axios.get('/teacherInfo').then((resp) => {
-    if (resp.status === 200) {
-      teachers.value = resp.data;
-      totalTeachers.value = teachers.value.length;
+// 后端API接口
+const api = {
+  // 获取学生列表
+  getStudents: async () => {
+    try {
+      await axios.get(`${API_BASE_URL}${API_ENDPOINTS.STUDENTS}`)
+      .then(response => {
+        const data = response.data
+        students.value = data.students;
+      })
+    } catch (error) {
+      console.error('获取学生列表失败:', error);
+      throw error;
     }
-  });
-};
+  },
 
-// 搜索框逻辑
-const searchClick = () => {
-  axios.post('/searchTeacher', { keywords: keywords.value }).then((resp) => {
-    if (resp.status === 200) {
-      searchResult.value = resp.data;
-      teachers.value = searchResult.value;
+  // 添加学生
+  addStudent: async (studentData) => {
+    try {
+        const response = await axios.get('http://localhost:8000/get_csrf_token/');
+        const csrfToken = response.data.token;
+       await axios.post(`${API_BASE_URL}${API_ENDPOINTS.ADD}`, studentData,{
+        headers:{
+          'Content-Type':"application/json",
+          "X-CSRFToken":csrfToken,
+        }
+       })
+      .then(response => {
+        const data = response.data
+        ElMessage({type:data.state,message : data.msg})
+      })
+    } catch (error) {
+      console.error('添加学生失败:', error);
+      throw error;
     }
-  });
-};
+  },
 
-// 更新选中记录的逻辑
-const handleAdd = () => {
-  addFormVisible.value = true;
-  Object.assign(addForm, {
-    id: '100',
-    account: '',
-    password: '',
-    name: '',
-    sex: '男',
-  });
-};
+  // 更新学生信息
+  updateStudent: async (studentData) => {
+    try {
+      await axios.get(`${API_BASE_URL}${API_ENDPOINTS.UPDATE}`, {params:studentData})
+      .then(response => {
+        const data = response.data
+        ElMessage({type:data.state,message : data.msg})
+      })
+    } catch (error) {
+      console.error('更新学生信息失败:', error);
+      throw error;
+    }
+  },
 
-// 更新提交逻辑
-const addSubmit = () => {
-  addFormRef.value.validate((valid) => {
-    if (valid) {
-      listenLoading.value = true;
-      axios
-        .post('/addTeacher', {
-          user: {
-            id: '',
-            account: addForm.account,
-            password: addForm.password,
-            type: 2,
-          },
-          name: addForm.name,
-          sex: addForm.sex,
-        })
-        .then((resp) => {
-          listenLoading.value = false;
-          if (resp.status === 200) {
-            addFormVisible.value = false;
-            loadTeacherInfo();
+  // 删除学生
+  deleteStudent: async (studentId) => {
+    try {
+      
+      await axios.get(`${API_BASE_URL}${API_ENDPOINTS.DEL}`,{params:{id:studentId}})
+      .then(response => {
+        const data = response.data
+        ElMessage({type:data.state,message : data.msg})
+      })
+    } catch (error) {
+      console.error('删除学生失败:', error);
+      throw error;
+    }
+  },
+
+  // 重置密码
+  resetPassword: async (passwordData) => {
+    try {
+      const response = await axios.get('http://localhost:8000/get_csrf_token/');
+        const csrfToken = response.data.token;
+      await axios.post(
+        `${API_BASE_URL}${API_ENDPOINTS.RESET_PASSWORD}`,
+        passwordData,
+        {
+          headers:{
+            'Content-Type':"application/json",
+            "X-CSRFToken":csrfToken,
           }
-        });
+        }
+      ).then(response => {
+        const data = response.data
+        ElMessage({type:data.state,message : data.msg})
+      })
+      
+    } catch (error) {
+      console.error('重置密码失败:', error);
+      throw error;
     }
-  });
-};
-
-// 性别变更
-const addFormChangeSex = (value) => {
-  addForm.sex = value === 1 ? '男' : '女';
-};
-
-// 编辑逻辑
-const handleEdit = (index, row) => {
-  editFormVisible.value = true;
-  Object.assign(editForm, {
-    id: row.id,
-    userId: row.user.id,
-    account: row.user.account,
-    password: row.user.password,
-    name: row.name,
-    sex: row.sex,
-  });
-  radios.value = editForm.sex === '男' ? 1 : 0;
-};
-
-// 编辑表单验证逻辑
-const editSubmit = () => {
-  editFormRef.value.validate((valid) => {
-    if (valid) {
-      listenLoading.value = true;
-      axios
-        .post('/updateTeacher', {
-          id: editForm.id,
-          user: {
-            id: editForm.userId,
-            account: editForm.account,
-            password: editForm.password,
-            type: 2,
-          },
-          name: editForm.name,
-          sex: editForm.sex,
-        })
-        .then((resp) => {
-          listenLoading.value = false;
-          if (resp.status === 200) {
-            editFormVisible.value = false;
-            loadTeacherInfo();
-          }
-        });
-    }
-  });
-};
-
-// 删除逻辑
-const deleteTeacher = (index, row) => {
-  axios.post('/deleteTeacher', { id: row.id }).then((resp) => {
-    if (resp.status === 200 && resp.data.code === 100) {
-      teachers.value.splice(index, 1);
-      totalTeachers.value--;
-    }
-  });
-};
-
-// 表单重置逻辑
-const resetForm = (formEl) => {
-  if (formEl) {
-    formEl.resetFields();
   }
 };
 
-// 分页逻辑
-// const handleSizeChange = (val) => {
-//   pageSize.value = val;
-// };
-// const handleCurrentChange = (val) => {
-//   currentPage.value = val;
-// };
+// 前端状态管理
+const students = ref([]);
+const searchQuery = ref('');
+const dialogVisible = ref(false);
+const dialogType = ref('add');
+const studentFormRef = ref(null);
+const studentForm = reactive({
+  id: '',
+  name: '',
+  className: '',
+  phone: '',
+  email: '',
+  password:"",
+});
 
-onMounted(() => {
-  loadTeacherInfo();
+// 表单验证规则
+const studentRules = {
+  id: [
+    { required: true, message: '请输入学号', trigger: 'blur' },
+    { min: 2, max: 20, message: '长度在 2 到 20 个字符', trigger: 'blur' }
+  ],
+  name: [
+    { required: true, message: '请输入姓名', trigger: 'blur' }
+  ],
+  className: [
+    { required: true, message: '请输入班级', trigger: 'blur' }
+  ],
+  phone: [
+    { required: true, message: '请输入手机号', trigger: 'blur' },
+    { pattern: /^1\d{10}$/, message: '请输入正确的手机号', trigger: 'blur' }
+  ],
+  email: [
+    { required: true, message: '请输入邮箱', trigger: 'blur' },
+    { type: 'email', message: '请输入正确的邮箱地址', trigger: 'blur' }
+  ]
+};
+
+// 分页相关
+const currentPage = ref(1);
+const pageSize = ref(10);
+const total = ref(0);
+const submitting = ref(false);
+
+// 重置密码相关
+const resetPwdVisible = ref(false);
+const resetPwdFormRef = ref(null);
+const currentStudent = ref(null);
+const resetPwdForm = reactive({
+  newPassword: '',
+  confirmPassword: ''
+});
+
+const resetPwdRules = {
+  newPassword: [
+    { required: true, message: '请输入新密码', trigger: 'blur' },
+    { min: 6, max: 20, message: '长度在 6 到 20 个字符', trigger: 'blur' }
+  ],
+  confirmPassword: [
+    { required: true, message: '请确认密码', trigger: 'blur' },
+    {
+      validator: (rule, value, callback) => {
+        if (value !== resetPwdForm.newPassword) {
+          callback(new Error('两次输入密码不一致'));
+        } else {
+          callback();
+        }
+      },
+      trigger: 'blur'
+    }
+  ]
+};
+
+// 计算属性：过滤后的学生列表
+const filteredStudents = computed(() => {
+  let data = students.value;
+  if (searchQuery.value) {
+    data = data.filter(s =>
+      s.name.includes(searchQuery.value) ||
+      s.id.includes(searchQuery.value) ||
+      s.className.includes(searchQuery.value) ||
+      s.phone.includes(searchQuery.value) ||
+      s.email.includes(searchQuery.value)
+    );
+  }
+  // 分页
+  const start = (currentPage.value - 1) * pageSize.value;
+  const end = start + pageSize.value;
+  updateTotal()
+  return data.slice(start, end);
+});
+
+// 更新总数
+const updateTotal = () => {
+  let data = students.value;
+  if (searchQuery.value) {
+    data = data.filter(s =>
+      s.name.includes(searchQuery.value) ||
+      s.id.includes(searchQuery.value) ||
+      s.className.includes(searchQuery.value) ||
+      s.phone.includes(searchQuery.value) ||
+      s.email.includes(searchQuery.value)
+    );
+  }
+  total.value = data.length;
+};
+
+// 搜索处理
+const handleSearch = async () => {
+  await api.getStudents();
+  currentPage.value = 1;
+};
+
+// 添加学生
+const handleAdd = () => {
+  dialogType.value = 'add';
+  Object.assign(studentForm, {
+    id: '', name: '', className: '', phone: '', email: '',password:""
+  });
+  dialogVisible.value = true;
+};
+
+// 编辑学生
+const handleEdit = (row, index) => {
+  dialogType.value = 'edit';
+  Object.assign(studentForm, row);
+  studentForm._editIndex = index;
+  dialogVisible.value = true;
+};
+
+// 删除学生
+const handleDelete = async (index) => {
+  try {
+    const student = students.value[index];
+    await api.deleteStudent(student.id);
+    await api.getStudents()
+    
+  } catch (error) {
+    ElMessage.error('删除失败');
+  }
+};
+
+// 提交表单
+const handleSubmit = async () => {
+  if (!studentFormRef.value) return;
+  
+  try {
+    await studentFormRef.value.validate();
+    
+    if (dialogType.value === 'add') {
+      await api.addStudent(studentForm);
+      await api.getStudents()
+    } else if (dialogType.value === 'edit') {
+      await api.updateStudent(studentForm);
+      await api.getStudents()
+    }
+    
+    dialogVisible.value = false;
+  } catch (error) {
+    ElMessage.error(error.message || '操作失败');
+  }
+};
+
+// 重置密码
+const handleResetPassword = (row) => {
+  currentStudent.value = row;
+  resetPwdForm.newPassword = '';
+  resetPwdForm.confirmPassword = '';
+  resetPwdVisible.value = true;
+};
+
+// 提交重置密码
+const handleResetPwdSubmit = async () => {
+  if (!resetPwdFormRef.value || !currentStudent.value) return;
+  
+  try {
+    await resetPwdFormRef.value.validate();
+    submitting.value = true;
+    
+    await api.resetPassword({
+      id:currentStudent.value.id,
+      newPassword: resetPwdForm.newPassword
+    });
+    resetPwdVisible.value = false;
+  } catch (error) {
+    ElMessage.error(error.message || '重置密码失败');
+  } finally {
+    submitting.value = false;
+  }
+};
+
+// 分页处理
+const handleSizeChange = (val) => {
+  pageSize.value = val;
+  currentPage.value = 1;
+};
+
+const handleCurrentChange = (val) => {
+  currentPage.value = val;
+};
+
+// 初始化数据
+onMounted(async () => {
+  try {
+    // 实际开发时使用API调用
+    await api.getStudents();
+    
+    // 开发阶段使用模拟数据
+    // students.value = generateMockStudents();
+  } catch (error) {
+    ElMessage.error('获取学生列表失败');
+  }
 });
 </script>
 
 <style scoped>
-.card {
-  margin-top: 16px;
-  background: #fff;
-  padding: 16px;
-  border-radius: 8px;
-  box-sizing: border-box;
+.student-manage {
+  padding: 20px;
+}
+
+.search-bar {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.search-bar .el-input {
+  width: 300px;
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+:deep(.el-table) {
+  margin-bottom: 20px;
 }
 </style>

@@ -10,7 +10,7 @@
       icon="el-icon-info"
       icon-color="red"
       title="确定退出吗？"
-      @confirm="handleLogout"
+      @confirm="out"
     >
       <template #reference>
         <el-button type="text" class="logout-button" @click="showPopconfirm">
@@ -22,6 +22,8 @@
 </template>
 
 <script>
+import axios from 'axios'
+axios.defaults.withCredentials = true; // 允许跨域携带 cookie 信息，必须加上
 export default {
   name: 'r-header',
   data() {
@@ -33,6 +35,7 @@ export default {
   methods: {
     out() {
       localStorage.clear()
+      axios.get("http://localhost:8000/admin/logout/")
       this.$router.push('/')
     }
   }

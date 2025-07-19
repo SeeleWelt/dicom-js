@@ -14,7 +14,7 @@
         <el-input v-model="ruleForm.uno" autocomplete="off" />
       </el-form-item>
       <el-form-item label="密码：" prop="password">
-        <el-input v-model="ruleForm.password" type="password" autocomplete="off" />
+        <el-input v-model="ruleForm.password" type="password" autocomplete="off" show-password />
       </el-form-item>
 
       <el-form-item label="验证码" prop="sidentifyMode" style="width: 500px">
@@ -45,12 +45,15 @@
 import SIdentify from '../../components/SidentifyView.vue'
 import { ElMessage } from 'element-plus'
 import { ref } from 'vue'
-import axios from '@/utils/axios-config.js'
+
 import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 
-const router = useRouter()
 
+import axios from 'axios'
+axios.defaults.withCredentials = true; // 允许跨域携带 cookie 信息，必须加上
+
+const router = useRouter()
 //获取路由器
 let sidentifyMode = ref('') //输入框验证码
 let identifyCode = ref('') //图形验证码
@@ -101,12 +104,12 @@ const submitForm =async () => {
       password: ruleForm.value.password
     }
 
-    console.log('请求数据' + requestData.email + ' ' + requestData.password)
+    console.log('请求数据' + requestData.uno + ' ' + requestData.password)
 
     const response = await axios.get('http://localhost:8000/get_csrf_token/');
     const csrfToken = response.data.token;
     axios
-      .post('http://localhost:8000/teacher/login', requestData,
+      .post('http://localhost:8000/teacher/login/', requestData,
         {
           headers:{
             'Content-Type':"application/json",
@@ -115,15 +118,15 @@ const submitForm =async () => {
         }
       )
       .then(function (response) {
+        const data = response.data
         console.log('响应数据：', response.data)
         if (response.data.state == "success") {
-          ElMessage({ type: 'success', message: '登录成功' })
-          // localStorage.setItem('teacherName', response.data.teacherName)
-          // localStorage.setItem('teacherID', response.data.teacherID)
-          // localStorage.setItem('email', response.data.email)
-          // localStorage.setItem('phoneNumber', response.data.phoneNumber)
-          // const p = localStorage.getItem('phoneNumber')
-          // console.log(p)
+          ElMessage({ type: data.state, message: data.message })
+          localStorage.setItem('name', response.data.name)
+          localStorage.setItem('id', response.data.id)
+          localStorage.setItem('email', response.data.email)
+          localStorage.setItem('phone', response.data.phone)
+          localStorage.setItem('title', response.data.title)
           // localStorage.setItem('avatar', response.data.avatar)
           router.push('/teacherIndex')
         } else {

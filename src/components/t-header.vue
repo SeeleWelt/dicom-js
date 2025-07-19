@@ -28,6 +28,9 @@
 </template>
 
 <script>
+import axios from 'axios'
+axios.defaults.withCredentials = true; // 允许跨域携带 cookie 信息，必须加上
+
 export default {
   name: 'r-header',
   data() {
@@ -35,19 +38,20 @@ export default {
       name:"李白",
       email:"123zhihu.com",
       phoneNumber: 123456,
-      avatar: 'src/assets/user.png',
+      avatar: "../../src/assets/user.png",
       currentTerm: "2"
     }
   },
   created() {
-    this.teacherName = localStorage.getItem('teacherName')|| this.name;
+    this.teacherName = localStorage.getItem('name')|| this.name;
     this.email = localStorage.getItem('email')|| this.email;
-    this.phoneNumber = localStorage.getItem('phoneNumber')|| this.number;
+    this.phoneNumber = localStorage.getItem('phone')|| this.number;
     this.avatar = localStorage.getItem('avatar')||this.avatar
   },
   methods: {
     out() {
       localStorage.clear()
+      axios.get("http://localhost:8000/teacher/logout/")
       this.$router.push('/')
     }
   }

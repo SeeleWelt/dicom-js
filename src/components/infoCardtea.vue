@@ -9,8 +9,6 @@
 </template>
 
 <script>
-import { ElMessage } from 'element-plus';
-import { fetchteacherInfo } from '@/api/api.js';
 
 export default {
   name: 'infoCardtea',
@@ -20,23 +18,11 @@ export default {
       // teacherinfoCard需要id工号、name姓名、work职务
       id: localStorage.getItem('id') || "1008611",
       name: localStorage.getItem('name') || "李白",
-      work: localStorage.getItem('work') || "院长",
+      work: localStorage.getItem('title') || "院长",
     };
   },
 async mounted() {
-    try {
-      const response = await fetchteacherInfo();
-      if (response.data) {
-        this.id = response.data.id;
-        this.name = response.data.name;
-        this.work = response.data.work;
-      } else {
-        ElMessage.error('获取信息失败');
-      }
-    } catch (error) {
-      console.error('获取学生信息出错:', error);
-      ElMessage.error('获取信息失败，请稍后再试');
-    }
+    
   }
 };
 </script>

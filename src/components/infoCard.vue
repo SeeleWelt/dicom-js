@@ -3,15 +3,14 @@
     <el-descriptions title="我的信息" :column="4">
       <el-descriptions-item label="学号:">{{ id }}</el-descriptions-item>
       <el-descriptions-item label="姓名:">{{ name }}</el-descriptions-item>
-      <el-descriptions-item label="专业:">{{ major }}</el-descriptions-item>
       <el-descriptions-item label="班级:">{{ classnum }} </el-descriptions-item>
     </el-descriptions>
   </el-card>
 </template>
 
 <script>
-import { ElMessage } from 'element-plus';
-import { fetchStudentInfo } from '@/api/api.js';
+// import { ElMessage } from 'element-plus';
+// import { fetchStudentInfo } from '@/api/api.js';
 
 export default {
   name: 'infoCard',
@@ -21,25 +20,24 @@ export default {
       // infoCard需要id学号、name姓名、major专业、classnum班级
       id: localStorage.getItem('id') || "2022101932",
       name: localStorage.getItem('name') || "张三",
-      major: localStorage.getItem('major') || "软件工程",
-      classnum: localStorage.getItem('classnum') || "1班"
+      classnum: localStorage.getItem('class') ||"还未加入班级"
     };
   },
   async mounted() {
-    try {
-      const response = await fetchStudentInfo();
-      if (response.data) {
-        this.id = response.data.id;
-        this.name = response.data.name;
-        this.major = response.data.major;
-        this.classnum = response.data.classnum;
-      } else {
-        ElMessage.error('获取信息失败');
-      }
-    } catch (error) {
-      console.error('获取学生信息出错:', error);
-      ElMessage.error('获取信息失败，请稍后再试');
-    }
+    // try {
+    //   const response = await fetchStudentInfo();
+    //   if (response.data) {
+    //     this.id = response.data.id;
+    //     this.name = response.data.name;
+    //     this.major = response.data.major;
+    //     this.classnum = response.data.classnum;
+    //   } else {
+    //     ElMessage.error('获取信息失败');
+    //   }
+    // } catch (error) {
+    //   console.error('获取学生信息出错:', error);
+    //   ElMessage.error('获取信息失败，请稍后再试');
+    // }
   }
 };
 </script>

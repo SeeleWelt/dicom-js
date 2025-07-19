@@ -1,52 +1,56 @@
 <script setup>
 import { ref } from 'vue'
-import { updateStudentInfo } from '@/api/api.js'; // 导入 API
 import { ElMessage } from 'element-plus';
+import axios from 'axios'
+axios.defaults.withCredentials = true; // 允许跨域携带 cookie 信息，必须加上
 
 // 从 localStorage 获取数据，如果没有则使用默认值
 const ruleForm = ref({
   name: localStorage.getItem('name') || '',
   id: localStorage.getItem('id') || '',
-  major: localStorage.getItem('major') || '',
-  classnum: localStorage.getItem('classnum') || '',
+  class: localStorage.getItem('class') || '',
   phone: localStorage.getItem('phone') || '',
   email: localStorage.getItem('email') || '',
   password: localStorage.getItem('password') || '',
   confirmPassword: ''
 })
-
-const submitForm = () => {
-  console.log('修改数据:', ruleForm.value);
-
-  updateStudentInfo(ruleForm.value)
-    .then((response) => {
-      console.log('修改响应数据:', response.data);
-      if (response.data.code === 0) {
-        ElMessage({ type: 'success', message: '修改成功' });
-        // 更新 localStorage 中的数据
-        localStorage.setItem('name', ruleForm.value.name);
-        localStorage.setItem('id', ruleForm.value.id);
-        localStorage.setItem('major', ruleForm.value.major);
-        localStorage.setItem('classnum', ruleForm.value.classnum);
-        localStorage.setItem('phone', ruleForm.value.phone);
-        localStorage.setItem('email', ruleForm.value.email);
-        localStorage.setItem('password', ruleForm.value.password);
-      } else {
-        ElMessage({ type: 'error', message: '修改失败' });
-      }
-    })
-    .catch((error) => {
-      console.error('修改请求失败:', error);
-      ElMessage({ type: 'error', message: '修改请求失败，请稍后再试' });
-    });
+const updateStudentInfo = async (requestData)=>{
+  const response = await axios.get('http://localhost:8000/get_csrf_token/');
+    const csrfToken = response.data.token;
+    axios
+      .post('http://localhost:8000/student/update/', requestData,
+        {
+          headers:{
+            'Content-Type':"application/json",
+            "X-CSRFToken":csrfToken,
+          }
+        }
+      ).then(response=>{
+        const data = response.data
+        if (data.state==="success")
+        {
+          // 更新 localStorage 中的数据
+          localStorage.setItem('name', data.name);
+          localStorage.setItem('id', data.id);
+          localStorage.setItem('class',data.class);
+          localStorage.setItem('phone', data.phone);
+          localStorage.setItem('email', data.email);
+        }
+        ElMessage({ type: data.state, message: data.msg });
+      }).catch((error) => {
+        console.error('修改请求失败:', error);
+        ElMessage({ type: 'error', message: '修改请求失败，请稍后再试' });
+      });
+}
+const submitForm = async () => {
+  await updateStudentInfo(ruleForm.value)
 };
 
 const resetForm = () => {
   ruleForm.value = {
     name: localStorage.getItem('name') || '',
     id: localStorage.getItem('id') || '',
-    major: localStorage.getItem('major') || '',
-    classnum: localStorage.getItem('classnum') || '',
+    class: localStorage.getItem('class'),
     phone: localStorage.getItem('phone') || '',
     email: localStorage.getItem('email') || '',
     password: localStorage.getItem('password') || '',
@@ -63,19 +67,15 @@ const resetForm = () => {
           <div>
             <el-form :model="ruleForm" label-width="100px">
               <el-form-item label="姓名">
-                <el-input v-model="ruleForm.name" placeholder="请输入姓名"></el-input>
+                <el-input v-model="ruleForm.name" placeholder="请输入姓名" :disabled="true"></el-input>
               </el-form-item>
 
               <el-form-item label="学号">
-                <el-input v-model="ruleForm.id" placeholder="请输入学号"></el-input>
+                <el-input v-model="ruleForm.id" placeholder="请输入学号" :disabled="true"></el-input>
               </el-form-item>
 
-              <el-form-item label="专业">
-                <el-input v-model="ruleForm.major" placeholder="请输入专业"></el-input>
-              </el-form-item>
-
-              <el-form-item label="班级">
-                <el-input v-model="ruleForm.classnum" placeholder="请输入班级"></el-input>
+              <el-form-item label="班级" >
+                <el-input v-model="ruleForm.class" placeholder="班级" :disabled="true"></el-input>
               </el-form-item>
 
               <el-form-item label="手机号">

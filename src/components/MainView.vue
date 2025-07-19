@@ -467,20 +467,20 @@ import MulIconToolBar from './SingleAxisViewport/MulIconToolBar.vue';
           if(value === "轴向")
           {
             this.layout[this.curIndex].original_orientation = "AXIAL"
-            if(this.originalLayout)
+            if(this.originalLayout[this.curIndex])
               this.originalLayout[this.curIndex].original_orientation = "AXIAL"
           }
           else if(value === "矢向")
           {
             this.layout[this.curIndex].original_orientation = "SAGGITAL"
-            if(this.originalLayout)
+            if(this.originalLayout[this.curIndex])
               this.originalLayout[this.curIndex].original_orientation = "SAGGITAL"
           }
           
           else if(value === "冠向")
           {
             this.layout[this.curIndex].original_orientation = "CORONAL"
-            if(this.originalLayout)
+            if(this.originalLayout[this.curIndex])
               this.originalLayout[this.curIndex].original_orientation = "CORONAL"
           }
         },

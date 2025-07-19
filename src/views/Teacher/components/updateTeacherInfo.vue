@@ -1,43 +1,65 @@
 <script setup>
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { ElMessage } from 'element-plus';
-import { updateTeacherInfo } from '@/api/api.js'; // 导入 API
+import axios from 'axios'
+axios.defaults.withCredentials = true; // 允许跨域携带 cookie 信息，必须加上
 
 const ruleForm = ref({
-  teacherID: localStorage.getItem('teacherID'),
-  teacherName: localStorage.getItem('teacherName'),
-  phoneNumber: localStorage.getItem('phoneNumber'),
+  id: localStorage.getItem('id'),
+  name: localStorage.getItem('name'),
+  phone: localStorage.getItem('phone'),
   email: localStorage.getItem('email'),
   password: '',
   confirmPassword: ''
 })
 
-const submitForm = () => {
+onMounted(()=>{
+  ruleForm.value = {
+    id: localStorage.getItem('id') || '',
+    name: localStorage.getItem('name') || '',
+    phone: localStorage.getItem('phone')|| '',
+    email: localStorage.getItem('email'),
+    password: '',
+    confirmPassword: ''
+  }
+})
+const updateTeacherInfo = async (requestData)=>{
+  const response = await axios.get('http://localhost:8000/get_csrf_token/');
+    const csrfToken = response.data.token;
+    axios
+      .post('http://localhost:8000/teacher/update/', requestData,
+        {
+          headers:{
+            'Content-Type':"application/json",
+            "X-CSRFToken":csrfToken,
+          }
+        }
+      ).then(response=>{
+        const data = response.data
+        if (data.state==="success")
+        {
+          // 更新 localStorage 中的数据
+          localStorage.setItem('name', data.name);
+          localStorage.setItem('phone', data.phone);
+          localStorage.setItem('email', data.email);
+        }
+        ElMessage({ type: data.state, message: data.msg });
+      }).catch((error) => {
+        console.error('修改请求失败:', error);
+        ElMessage({ type: 'error', message: '修改请求失败，请稍后再试' });
+      });
+}
+const submitForm = async () => {
   console.log('修改数据:', ruleForm.value);
 
-  updateTeacherInfo(ruleForm.value)
-    .then((response) => {
-      console.log('修改响应数据:', response.data);
-      if (response.data.code === 0) {
-        ElMessage({ type: 'success', message: '修改成功' });
-        // 更新 localStorage 中的数据
-        localStorage.setItem('teacherName', ruleForm.value.teacherName);
-        localStorage.setItem('phoneNumber', ruleForm.value.phoneNumber);
-        localStorage.setItem('email', ruleForm.value.email);
-      } else {
-        ElMessage({ type: 'error', message: '修改失败' });
-      }
-    })
-    .catch((error) => {
-      console.error('修改请求失败:', error);
-      ElMessage({ type: 'error', message: '修改请求失败，请稍后再试' });
-    });
+  await updateTeacherInfo(ruleForm.value)
+
 };
 
 const resetForm = () => {
   ruleForm.value = {
-    teacherName: localStorage.getItem('teacherName') || '',
-    phoneNumber: localStorage.getItem('phoneNumber') || '',
+    teacherName: localStorage.getItem('name') || '',
+    phoneNumber: localStorage.getItem('phone') || '',
     email: localStorage.getItem('email') || '',
     password: '',
     confirmPassword: ''
@@ -57,12 +79,12 @@ const goBack = () => {
         <el-card style="width: 500px">
           <div>
             <el-form :model="ruleForm" :rules="rules" label-width="100px">
-              <el-form-item label="姓名" prop="teacherName">
-                <el-input v-model="ruleForm.teacherName" placeholder="请输入姓名"></el-input>
+              <el-form-item label="姓名" prop="name">
+                <el-input v-model="ruleForm.name" placeholder="请输入姓名"></el-input>
               </el-form-item>
 
-              <el-form-item label="手机号" prop="phoneNumber">
-                <el-input v-model="ruleForm.phoneNumber" placeholder="请输入手机号"></el-input>
+              <el-form-item label="手机号" prop="phone">
+                <el-input v-model="ruleForm.phone" placeholder="请输入手机号"></el-input>
               </el-form-item>
 
               <el-form-item label="邮箱" prop="email">

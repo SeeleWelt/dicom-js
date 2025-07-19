@@ -21,49 +21,32 @@
           <el-sub-menu index="2">
             <template #title>
               <el-icon style="color: #ffffff"><Menu /></el-icon
-              ><span style="color: #ffffff">用户管理</span>
+              ><span style="color: #ffffff">教师档案</span>
             </template>
 
-            <RouterLink to="/changePassword">
-              <el-menu-item index="2-1">老师密码修改</el-menu-item>
-            </RouterLink>
-            <RouterLink to="/changeStudentPwd">
-              <el-menu-item index="2-2">学生密码修改</el-menu-item>
+            <RouterLink to="/inquireTeacher">
+              <el-menu-item index="2-1">查询老师</el-menu-item>
             </RouterLink>
           </el-sub-menu>
 
           <el-sub-menu index="3">
             <template #title>
               <el-icon style="color: #ffffff"><Menu /></el-icon
-              ><span style="color: #ffffff">教师档案</span>
+              ><span style="color: #ffffff">学生档案</span>
             </template>
 
-            <RouterLink to="/inquireTeacher">
-              <el-menu-item index="3-1">查询老师</el-menu-item>
+            <RouterLink to="/inquireStudent">
+              <el-menu-item index="3-1">查询学生</el-menu-item>
             </RouterLink>
           </el-sub-menu>
 
           <el-sub-menu index="4">
             <template #title>
               <el-icon style="color: #ffffff"><Menu /></el-icon
-              ><span style="color: #ffffff">学生档案</span>
-            </template>
-
-            <RouterLink to="/inquireStudent">
-              <el-menu-item index="4-1">查询学生</el-menu-item>
-            </RouterLink>
-          </el-sub-menu>
-
-          <el-sub-menu index="5">
-            <template #title>
-              <el-icon style="color: #ffffff"><Menu /></el-icon
               ><span style="color: #ffffff">课程管理</span>
             </template>
             <router-link to="/scheduleView">
-              <el-menu-item index="5-1">排课</el-menu-item>
-            </router-link>
-            <router-link to="/scheduleChange">
-              <el-menu-item index="5-2">修改课程信息</el-menu-item>
+              <el-menu-item index="4-1">排课</el-menu-item>
             </router-link>
           </el-sub-menu>
         </el-menu>
@@ -72,7 +55,9 @@
   </div>
 </template>
 
-<script setup></script>
+<script setup>
+
+</script>
 
 <style scoped>
 /* 给二级选项框添加背景色和白色字体 */
